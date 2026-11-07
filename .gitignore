@@ -1,0 +1,12 @@
+# Install dependencies for the current OS; never commit npm-generated executables.
+node_modules/
+dist/
+*.tsbuildinfo
+.netlify/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

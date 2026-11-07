@@ -1,0 +1,40 @@
+name: Production build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reject committed generated files
+        run: |
+          tracked=$(git ls-files -- node_modules dist '*.tsbuildinfo')
+          if [ -n "$tracked" ]; then
+            echo "Generated files must not be committed:"
+            printf '%s\n' "$tracked"
+            exit 1
+          fi
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Clean dependency install (including build tools)
+        run: npm ci --include=dev
+      - name: Verify Linux compiler and bundler executables
+        run: |
+          ./node_modules/.bin/tsc --version
+          ./node_modules/.bin/vite --version
+      - name: Run tests
+        run: npm test
+      - name: Build production site
+        run: npm run build
+      - name: Verify generated site
+        run: test -s dist/index.html && test -d dist/assets
